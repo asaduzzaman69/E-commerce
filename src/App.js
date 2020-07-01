@@ -1,41 +1,36 @@
 import React from 'react';
 import './App.css';
-import {Route,Switch} from 'react-router-dom'
+import {Route,Switch, Redirect} from 'react-router-dom'
 import HomePage from './pages/homepage/homepage.component'
 import ShopPage from './pages/shop/shop.component'
 import Header from './component/header/header.component'
+import { connect } from 'react-redux'
+import { setCurrentUser } from './redux/user/user.action'
 import SignInSignUp from './pages/SignIn-SignUp/SignIn-SignUp.component'
 import {auth,currentUserUpdateProfile} from './Firebase/firebase.utils'
 
 
 
  class App extends React.Component{
-    constructor(){
-      super()
-      this.state = {
-        currentUser:null
-      
-      }
-    };
+    
     unsubscribeFromAuth = null;
 
     componentDidMount(){
+      const { setCurrentUser } = this.props
      this.unsubscribeFromAuth =  auth.onAuthStateChanged( async user => {
        if(user) {
         const userRef = await currentUserUpdateProfile(user);
       
         userRef.onSnapshot(el => {
-          this.setState({
-            currentUser:{id:el.id,
-            ...el.data()}
+          setCurrentUser({id:el.id,
+            ...el.data()})
             
             
-          })
         })
       
        }
        else{
-         this.setState({currentUser:user})
+        setCurrentUser(user)
       
        }
       } 
@@ -48,14 +43,13 @@ import {auth,currentUserUpdateProfile} from './Firebase/firebase.utils'
     
     }
     render(){
-      window.m = this.state;
       return (
         <div>
-          <Header currentUser={this.state.currentUser} />
+          <Header />
           <Switch>
           <Route  exact path="/" component={HomePage} />
           <Route  exact path="/shop" component={ShopPage} />
-          <Route  exact path="/SignIn" component={SignInSignUp} />
+          <Route  exact path="/SignIn" render={() => this.props.currentUser ? <Redirect to='/' /> : <SignInSignUp /> } />
       
           </Switch>
 
@@ -66,7 +60,15 @@ import {auth,currentUserUpdateProfile} from './Firebase/firebase.utils'
       
     }
 
-    }
+ }
+    const mapStateToProps = state => (
+      {
+        currentUser:state.user.currentUser
+      }
+    )
+    const mapDispatchToProps = dispatch => ({
+      setCurrentUser:user =>dispatch(setCurrentUser(user))
+    })
 
-    export default App;
+    export default connect(mapStateToProps,mapDispatchToProps)(App);
 

@@ -13,7 +13,7 @@ const DbConfig = {
     measurementId: "G-GBX8HWWRE7"
 }
 
-export const currentUserUpdateProfile = async (userAuth,...additionalData) => {
+export const currentUserUpdateProfile = async (userAuth,additionalData) => {
     if(!userAuth) return;
 
     const userRef =  firestore.doc(`user/${userAuth.uid}`) 
